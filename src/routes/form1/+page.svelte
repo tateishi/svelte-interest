@@ -8,9 +8,11 @@
     let date_from: string = getToday();
     let date_to: string = yearsAfter(date_from);
 
+    let place:number = 0;
+
     $: interest = amount * rate * days / days_per_year / 100;
-    $: national_tax = Math.floor(interest * national_tax_rate / 100);
-    $: local_tax = Math.floor(interest * local_tax_rate / 100);
+    $: national_tax = floorToPlace(interest * national_tax_rate / 100, place);
+    $: local_tax = floorToPlace(interest * local_tax_rate / 100, place);
     $: total_tax = national_tax + local_tax;
     $: net_interest = interest - total_tax;
     $: total = Number(amount) + Number(net_interest);
@@ -53,6 +55,25 @@
     function setMonthsAfter(n: number) {
         date_to = monthsAfter(date_from, n);
     }
+
+    function floorToPlace(value:number, place: number = 0): number {
+        let p = Math.pow(10, place);
+        return Math.floor(value * p) / p;
+    }
+
+    function setPlaceToZero() {
+        place = 0;
+    }
+
+    function setPlaceToTwo() {
+        place = 2;
+    }   
+
+    $: console.log(`小数点以下${place}桁`);
+
+    function formatNumber(value: number): string {
+        return floorToPlace(value, place).toFixed(place).toLocaleString();
+    }   
 </script>
 
 <div class="text-center text-orange-500">
@@ -71,12 +92,14 @@
     <label for="date_to">終了日:</label>
     <input id="date_to" type="date" bind:value={date_to} />
 </div>
+
 <div class="text-center text-orange-500">
     <button on:click={()=>setYearsAfter(1)}>1年後</button>
     <button on:click={()=>setYearsAfter(2)}>2年後</button>
     <button on:click={()=>setYearsAfter(3)}>3年後</button>
     <button on:click={()=>setYearsAfter(5)}>5年後</button>
 </div>
+
 <div class="text-center text-orange-500">
     <button on:click={()=>setMonthsAfter(1)}>1ヶ月後</button>
     <button on:click={()=>setMonthsAfter(2)}>2ヶ月後</button>
@@ -85,8 +108,13 @@
 </div>
 
 <div class="text-center text-orange-500">
+    <button on:click={()=>setPlaceToZero()}>整数</button>
+    <button on:click={()=>setPlaceToTwo()}>小数点2桁</button>
+</div>
+
+<div class="text-center text-orange-500">
     <label for="gankin">元金:</label>
-    <output id="gankin">{amount.toLocaleString()}</output>      
+    <output id="gankin">{formatNumber(amount)}</output>      
 </div>
 <div class="text-center text-orange-500">
     <label for="days">日数:</label>
@@ -94,25 +122,25 @@
 </div>
 <div class="text-center text-orange-500">
     <label for="interest">利息:</label>
-    <output id="interest">{Math.floor(interest).toLocaleString()}</output>
+    <output id="interest">{formatNumber(interest)}</output>
 </div>
 <div class="text-center text-orange-500">
     <label for="national_tax">国税:</label>
-    <output id="national_tax">{national_tax.toLocaleString()}</output>
+    <output id="national_tax">{formatNumber(national_tax)}</output>
 </div>
 <div class="text-center text-orange-500">
     <label for="local_tax">地方税:</label>
-    <output id="local_tax">{local_tax.toLocaleString()}</output>
+    <output id="local_tax">{formatNumber(local_tax)}</output>
 </div>
 <div class="text-center text-orange-500">
     <label for="total_tax">税金:</label>
-    <output id="total_tax">{total_tax.toLocaleString()}</output> 
+    <output id="total_tax">{formatNumber(total_tax)}</output> 
 </div>
 <div class="text-center text-orange-500">
     <label for="net_interest">税引後利息:</label>
-    <output id="net_interest">{Math.floor(net_interest).toLocaleString()}</output>
+    <output id="net_interest">{formatNumber(net_interest)}</output>
 </div>
 <div class="text-center text-orange-500">
     <label for="total">合計:</label>
-    <output id="total">{Math.floor(total).toLocaleString()}</output>
+    <output id="total">{formatNumber(total)}</output>
 </div>
