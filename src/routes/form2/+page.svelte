@@ -1,26 +1,29 @@
 <script lang="ts">
+    import BigNumber from "bignumber.js";
+    
     const national_tax_rate: number = 15.315;
     const local_tax_rate: number = 5;
     const days_per_year: number = 365;
 
-    let amount: number = 1000000;
-    let rate: number = 0.2;
+    let amount: string = "1000000";
+    let rate: string = "0.2";
+
     let date_from: string = getToday();
     let date_to: string = yearsAfter(date_from);
 
-    let place:number = 0;
+    let place: number = 0;
 
-    $: interest = amount * rate * days / days_per_year / 100;
-    $: national_tax = floorToPlace(interest * national_tax_rate / 100, place);
-    $: local_tax = floorToPlace(interest * local_tax_rate / 100, place);
-    $: total_tax = national_tax + local_tax;
-    $: net_interest = interest - total_tax;
-    $: total = Number(amount) + Number(net_interest);
+    $: interest = BigNumber(amount).times(rate).times(days).dividedBy(days_per_year).dividedBy(100).decimalPlaces(place, 1);
+    $: national_tax = interest.times(national_tax_rate).dividedBy(100).decimalPlaces(place, 1);
+    $: local_tax = interest.times(local_tax_rate).dividedBy(100).decimalPlaces(place, 1);
+    $: total_tax = national_tax.plus(local_tax);
+    $: net_interest = interest.minus(total_tax);
+    $: total = BigNumber(amount).plus(net_interest);
     $: days = Math.floor((Number(new Date(date_to)) - Number(new Date(date_from))) / (1000 * 60 * 60 * 24));
 
     $: console.log(`${date_from} and ${date_to}`);
     $: console.log(`${days} days`);
-
+    $: console.log(`amount: ${amount.toString()}`);
     function getToday() : string {
         let today: string = new Date().toLocaleDateString();
         let a = today.split("/");
@@ -71,8 +74,12 @@
 
     $: console.log(`小数点以下${place}桁`);
 
-    function formatNumber(value: number): string {
-        return floorToPlace(value, place).toFixed(place).toLocaleString();
+    function formatNumber(value: BigNumber): string {
+        return value.toFormat(place, BigNumber.ROUND_DOWN, {
+            groupSeparator: ",",
+            groupSize: 3,
+            decimalSeparator: "."
+        });
     }   
 </script>
 
@@ -114,7 +121,7 @@
 
 <div class="text-center text-orange-500">
     <label for="gankin">元金:</label>
-    <output id="gankin">{formatNumber(amount)}</output>      
+    <output id="gankin">{formatNumber(BigNumber(amount))}</output>      
 </div>
 <div class="text-center text-orange-500">
     <label for="days">日数:</label>
